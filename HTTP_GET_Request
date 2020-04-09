@@ -1,0 +1,84 @@
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <HTTPClient.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+WiFiMulti WiFiMulti;
+
+const char* ssid = "hoit2.4G";
+const char* password = "rlatjdgml2212";
+String url = "http://ec2-35-170-200-137.compute-1.amazonaws.com:5000/temperature?device_id=0&temperature=";
+
+const int oneWireBus = 4;
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
+
+char ch[150];
+
+void setup()
+{
+    Serial.begin(115200);
+    delay(10);
+
+    WiFi.begin(ssid, password);
+
+    Serial.println();
+    Serial.println();
+    Serial.print("Waiting for WiFi... ");
+
+    while(WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    delay(500);
+
+    sensors.begin();
+}
+
+
+void loop()
+{
+  float temperatureC;
+  int len = url.length();
+  if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
+    HTTPClient http;
+    
+    sensors.requestTemperatures(); 
+    temperatureC = sensors.getTempCByIndex(0);
+
+    url = url.substring(0, len+1);
+    url.concat(String(temperatureC));
+    url.concat("&sequence_number=123");
+  
+    http.begin(url); //Specify the URL
+    int httpCode = http.GET();                                        //Make the request
+
+    Serial.println(url);
+    
+    if (httpCode > 0) { //Check for the returning code
+ 
+        String payload = http.getString();
+        Serial.println(httpCode);
+        Serial.println(payload);
+      }
+ 
+    else {
+      Serial.println("Error on HTTP request");
+    }
+ 
+    http.end(); //Free the resources
+  }
+  
+  Serial.print(temperatureC);
+  Serial.println("ºC");
+    
+  delay(60000);
+}
