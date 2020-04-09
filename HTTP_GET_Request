@@ -7,9 +7,10 @@
 
 WiFiMulti WiFiMulti;
 
-const char* ssid = "hoit2.4G";
-const char* password = "rlatjdgml2212";
+const char* ssid = "wifi_id";
+const char* password = "wifi_password";
 String url = "http://ec2-35-170-200-137.compute-1.amazonaws.com:5000/temperature?device_id=0&temperature=";
+int len = url.length();
 
 const int oneWireBus = 4;
 OneWire oneWire(oneWireBus);
@@ -47,14 +48,14 @@ void setup()
 void loop()
 {
   float temperatureC;
-  int len = url.length();
+  
   if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
     HTTPClient http;
     
     sensors.requestTemperatures(); 
     temperatureC = sensors.getTempCByIndex(0);
 
-    url = url.substring(0, len+1);
+    url = url.substring(0, len);
     url.concat(String(temperatureC));
     url.concat("&sequence_number=123");
   
